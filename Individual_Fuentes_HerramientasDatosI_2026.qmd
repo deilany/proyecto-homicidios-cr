@@ -42,9 +42,7 @@ execute:
 source("config/config.R")
 source("cod/00_paquetes.R")
 source("cod/02_funciones_formato.R")
-print(ruta_mensual)
-print(file.exists(ruta_mensual))
-
+source("cod/06_graficos.R")
 
 
 # Si faltan resultados intermedios, se generan ejecutando los scripts en orden
