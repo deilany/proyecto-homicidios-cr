@@ -18,7 +18,7 @@ tab_periodos <- mensual |>
 
 meses_per <- count(mensual, periodo) # meses por periodo
 n_periodos <- set_names(meses_per$n, meses_per$periodo)
-promedio_periodo <- mensual |> group_by(periodo) |> summarise(m = mean(homicidios)) |> tibble::deframe()
+promedio_periodo <- mensual |> group_by(periodo) |> summarise(m = mean(homicidios)) |> deframe()
 
 # resumen por subdelito: ajuste de cuentas frente al resto y otros como: femicidio, riñas, no determinado, violencia dómestica...
 homicidios <- homicidios |>
