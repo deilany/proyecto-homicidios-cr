@@ -74,7 +74,7 @@ if (!file.exists(ruta_mapa)) {
 }
 mapa <- st_read(ruta_mapa, quiet = TRUE) |>
   mutate(clave = prov_clave(shapeName))
-prov_sin_match <- setdiff(unique(prov_dfclave),mapaclave)  # control: debería ser solo "sin dato"
+prov_sin_match <- setdiff(unique(prov_df$clave),mapa$clave)  # control: debería ser solo "sin dato"
 
 saveRDS(list(tab_periodos = tab_periodos, n_per = n_periodos, m_per = promedio_periodo, sub_anual = sub_anual,
              subdelito = subdelito, prov_df = prov_df, prov_cambio = prov_cambio,
