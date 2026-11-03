@@ -42,10 +42,13 @@ execute:
 source("config/config.R")
 source("cod/00_paquetes.R")
 source("cod/02_funciones_formato.R")
-source("cod/06_graficos.R")
+print(ruta_mensual)
+print(file.exists(ruta_mensual))
+
+
 
 # Si faltan resultados intermedios, se generan ejecutando los scripts en orden
-if (!file.exists(ruta_mensual)) source("cod/01_limpieza_datos.R")
+if (!file.exists(ruta_mensual) || !file.exists(ruta_limpio)) source("cod/01_limpieza_datos.R")
 if (!file.exists(ruta_modelo)) source("cod/03_modelo_poisson.R")
 if (!file.exists("data/simulaciones.rds")) source("cod/04_simulaciones.R")
 if (!file.exists("data/analisis_exploratorio.rds")) source("cod/05_analisis_exploratorio.R")
