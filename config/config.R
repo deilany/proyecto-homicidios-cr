@@ -1,6 +1,11 @@
 # modificado por Deilany Fuentes Barquero
 
 ruta_csv <- "data/Estadisticas.csv" #datos descargados el 15 de octubre del OIJ
+ruta_limpio  <- "data/homicidios_limpio.rds"  # registros de homicidio “limpios”
+ruta_mensual <- "data/serie_mensual.rds" # serie mensual de conteos
+ruta_modelo  <- "data/resultados_modelo.rds"  # resultados de modelos
+ruta_mapa <- "info/cri_provincias.geojson"
+
 fecha_descarga <- "15 de octubre de 2026"
 
 # Fechas clave de la serie
