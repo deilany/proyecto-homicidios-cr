@@ -9,4 +9,3 @@ suppressPackageStartupMessages({
   library(knitr) # tablas en el informe
   library(sf) # mapa por provincia 
 })
-
