@@ -2,37 +2,28 @@
 title: "Proyección de los homicidios en Costa Rica: análisis de la serie mensual del OIJ, 2015-2026"
 author: "Deilany Fuentes Barquero - Carné C5F177"
 lang: es
+
 bibliography: info/referencias.bib
 csl: info/apa.csl
 link-citations: true
+
 format:
-  pdf:
-    documentclass: article
+  typst:
     fontsize: 12pt
-    geometry:
-      - margin=2cm
+    papersize: a4
+    margin:
+      x: 2cm
+      y: 2cm
     number-sections: false
-    fig-pos: "H"
-    include-in-header:
-      text: |
-        \usepackage{booktabs}
-        \usepackage{titlesec}
-        \titleformat{\section}{\large\bfseries}{}{0pt}{}
-        \titlespacing*{\section}{0pt}{9pt}{3pt}
-        \titleformat{\subsection}{\normalsize\bfseries}{}{0pt}{}
-        \titlespacing*{\subsection}{0pt}{6pt}{2pt}
-        \usepackage{titling}
-        \setlength{\droptitle}{-1.6cm}
-        \pretitle{\begin{center}\large\bfseries}
-        \posttitle{\end{center}}
-        \preauthor{\begin{center}\normalsize}
-        \postauthor{\end{center}}
-        \predate{}\postdate{}\date{}
+    columns: 1
+    toc: false
+
 execute:
   echo: false
   warning: false
   message: false
 ---
+
 
 ```{r}
 #| label: preparacion
@@ -76,54 +67,59 @@ cmp_txt <- if (mae[["poisson"]] <= mae[[mejor]]) "el modelo de Poisson tuvo el m
 
 ## Introducción
 
-Los homicidios constituyen un indicador relevante para analizar la seguridad de un país y la evolución de la violencia letal. Según la Oficina de las Naciones Unidas contra la Droga y el Delito, en 2021 se registraron aproximadamente 458 000 homicidios en el mundo [@unodc2023]. En Costa Rica, el Organismo de Investigación Judicial (OIJ) contabilizó 907 homicidios en 2023, frente a los 654 registrados en 2022 [@observador2024].
+  Los homicidios constituyen un indicador relevante para analizar la seguridad de un país y la evolución de la violencia letal. En Costa Rica, el Organismo de Investigación Judicial (OIJ) contabilizó 907 homicidios en 2023, frente a los 654 registrados en 2022 [@observador2024].
 
-Desde una perspectiva actuarial, el análisis de estos eventos permite estudiar la evolución de su frecuencia y estimar posibles escenarios futuros, considerando la incertidumbre asociada a las proyecciones. Sin embargo, los resultados dependen de los datos disponibles y de los supuestos del modelo empleado.
+  Desde una perspectiva actuarial, el análisis de estos eventos permite estudiar la evolución de su frecuencia y estimar posibles escenarios futuros, considerando la incertidumbre asociada a las proyecciones. Sin embargo, los resultados dependen de los datos disponibles y de los supuestos del modelo empleado.
 
-En este contexto, el presente trabajo analiza la serie mensual de homicidios registrada por el OIJ entre enero de 2015 y junio de 2026 [@oij2026]. La investigación busca determinar cómo ha cambiado el nivel de homicidios durante este período y estimar su comportamiento durante los siguientes 12 y 24 meses. Para ello, se utiliza un modelo de regresión de Poisson y se construyen escenarios que permiten comparar distintos niveles de ocurrencia.
+  En este contexto, el presente trabajo analiza la serie mensual de homicidios registrada por el OIJ entre enero de 2015 y junio de 2026 [@oij2026]. La investigación busca determinar cómo ha cambiado el nivel de homicidios durante este período y estimar su comportamiento durante los siguientes 12 y 24 meses. Para ello, se utiliza un modelo de regresión de Poisson y se construyen escenarios que permiten comparar distintos niveles de ocurrencia.
 
 
 ## Objetivo
 
-Analizar la evolución mensual de los homicidios en Costa Rica entre enero de 2015 y junio de 2026 mediante un modelo de regresión de Poisson, con el propósito de identificar cambios en su nivel de ocurrencia y proyectar su frecuencia durante los 12 y 24 meses posteriores a junio de 2026, bajo distintos escenarios.
+  Analizar la evolución mensual de los homicidios en Costa Rica entre enero de 2015 y junio de 2026 mediante un modelo de regresión de Poisson, con el propósito de identificar cambios en su nivel de ocurrencia y proyectar su frecuencia durante los 12 y 24 meses posteriores a junio de 2026, bajo distintos escenarios.
 
 ## Metodología
 
 ## Datos
 
-La infromación utilizada proviene de la base de estadística policiales del Organismo de Investigación Judicial (OIJ) [@oij2026], descargada el `r fecha_descarga`. Cada registró corresponde a una víctima de homicidio e incluye variables como el subdelito, la fecha de hecho, provincia, cantón y datos de la víctima. El OIJ actualiza los datos a diario, así que las cifras recientes podrían cambiar.
+  La información utilizada proviene de la base de estadísticas policiales del Organismo de Investigación Judicial [@oij2026], descargada el `r fecha_descarga`. Cada registro corresponde a una víctima de homicidio e incluye variables como el subdelito, la fecha de hecho, provincia, cantón y datos de la víctima. El OIJ actualiza los datos a diario, así que las cifras recientes podrían cambiar.
 
-La base contiene `r fmt_entero(crudo$n_total)` registros, con fechas comprendida entre el `r crudo$rango[1]` y `r crudo$rango[2]`. Debido a que antes de 2015 hay muy pocos registros y el año 2014 apaparenta falta de información, el análisis se restringió al periodo de enero de 2015 a junio de 2026. En este intervalo se contabilizaron `r fmt_entero(nrow(homicidios))` víctimas en `r n_meses` meses. 
+  La base contiene `r fmt_entero(crudo$n_total)` registros, con fechas comprendidas entre el `r crudo$rango[1]` y `r crudo$rango[2]`. Debido a que antes de 2015 hay muy pocos registros y el año 2014 aparenta tener información incompleta, el análisis se restringió al periodo de enero de 2015 a junio de 2026. En este intervalo se contabilizaron `r fmt_entero(nrow(homicidios))` víctimas en `r n_meses` meses. 
 
 ## Procedimiento
 
-Para identificar posibles cambios en el nivel de homicidios, se aplicó el procedimiento de Bai y Perron [@schwarz1978], mediante el paquete `strucchange` [@zeileis2002]. Se estableció una longitud mínima aproximada de 20 meses por segmentos y se utilizó el criterio de información bayesiano (BIC) para seleccionar el número de quiebres estructurales.
+  Para identificar posibles cambios en el nivel de homicidios, se aplicó el procedimiento de Bai y Perron [@bai1998], mediante el paquete `strucchange` [@zeileis2002]. Se estableció una longitud mínima aproximada de 20 meses por segmentos y se utilizó el criterio de información bayesiano (BIC [@schwarz1978]) para seleccionar el número de quiebres estructurales. El procedimiento identificó un único quiebre, situado al finalizar septiembre del 2022, por lo que octubre de ese mismo año se consideró el inicio del nuevo nivel.
 
-Posteriormente, se ajustó un modelo de regresión de Poisson para los conteos mensuales de homicidios, dada la naturaleza discreta de la variable de interés y su utilidad para modelar frecuencia de eventos. La especificación incorporó variables indicadoras para representar el cambio de nivel identificado y el comportamiento obseravo a partir de enero del 2026, donde oeficiente `salto` vale 1 desde el cambio de nivel y `baja` desde enero de 2026. Estos coeficientes exponenciales $e^{\beta_1}$ y $e^{\beta_2}$ permiten interpretar los cambios estimados como razones entre los niveles esperados de homicidios.  $Y_t$:
+  Posteriormente, se ajustó un modelo de regresión de Poisson para los conteos mensuales de homicidios, dada la naturaleza discreta de la variable de interés y su utilidad para modelar frecuencia de eventos. Inicialmente, se consideró una especificación con dos niveles, es decir, un solo punto de quiebre ubicado en el año 2022. 
+  
+  Después, se incorporó una segunda variable indicadora para representar la disminución observada durante el primer semestre de 2026. Este tercer nivel se incluyó como una especificación adicional del modelo y no como un segundo quiebre seleccionado por el procedimiento de Bai y Perron.
+
+Esto se expresa de la siguiente forma: 
 $$Y_t \sim \text{Poisson}(\lambda_t), \qquad \log \lambda_t = \beta_0 + \beta_1\,\text{salto}_t + \beta_2\,\text{baja}_t$$
 
-En caunto a la adecuación del modelo, se examinó mediante el análisis de la dispersión, la tendencia, la estacionalidad, el efecto COVID y autocorrelación de residuos [@ljung1978]. También se consideró la posible influencia del período de la pandemia de COVID-19.
+  Donde $Y_t$ representa el número de homicidios en el mes (t), mientras que $\lambda_t$ corresponde a su valor esperado. La variable _salto_ toma el valor 1 desde octubre de 2022 y la variable _baja_ toma el valor 1 a partir de enero de 2026; ambas toman el valor 0 antes de sus respectivas fechas. Los coeficientes exponenciados permiten interpretar los cambios entre los niveles esperados de homicidios.
 
-Para evaluar la capacidad predictiva, se ajustó el modelo con información hasta diciembre de 2025 y se compararon sus proyecciones con los registros del primer semestre de 2026. Asimismo, se contrastó su desempeño con modelos de suavizamiento exponencial (ETS [@hyndman2002]), modelos ARIMA/SARIMA [@hyndman2008] y métodos basados en promedios históricos, utilizando el error absoluto medio (MAE) en predicciones a seis meses.
+  Por otro lado, se analizaron los datos mediante pruebas de dispersión, la tendencia y la estacionalidad mensual, el posible efecto de la pandemia de COVID-19 y la autocorrelación de residuos mediante la prueba de Ljung-Box [@ljung1978]. 
 
-Finalmente, se construyeron tres escenarios de proyección para los 12 y 24 meses posteriores a junio de 2026: la continuidad del nivel registrado entre octubre de 2022 y diciembre de 2025, la permanencia del nivel observado durante el primer semestre de 2026 y el retorno al nivel previo a octubre de 2022. Se simularon 20 000 trayectorias para estimar las medianas de los conteos futuros y sus intervalos del 95 %, incorporando la incertidumbre según el procedimiento de simulación utilizado.
+  Ahora bien, la capacidad predictiva se evaluó ajustando el modelo con información hasta diciembre de 2025 y se compararon sus proyecciones con los registros del primer semestre de 2026. Asimismo, se contrastó su desempeño con modelos de suavizamiento exponencial ETS [@hyndman2002], el modelo ARIMA [@hyndman2008] y métodos basados en promedios históricos, utilizando el error absoluto medio (MAE) en predicciones a seis meses.
 
+  Finalmente, se construyeron tres escenarios de proyección para los 12 y 24 meses posteriores a junio de 2026: la continuidad del nivel registrado entre octubre de 2022 y diciembre de 2025, la permanencia del nivel observado durante el primer semestre de 2026 y el retorno al nivel previo a octubre de 2022. Se simularon 20 000 trayectorias para estimar las medianas de los conteos futuros y sus intervalos predictivos del 95 %, considerando la incertidumbre de los párametros estimados y la variabilidad de los conteos bajo el modelo Poisson.
 
 # Resultados
 
 ## Análisis exploratorio
 
-Entre enero de 2015 y septiembre de 2022 hubo en promedio `r fmt_dec(m_per[["1_antes"]])` homicidios mensuales. A partir de octubre de 2022, el promedio aumentó a `r fmt_dec(m_per[["2_alto"]])` homicidios por mes, lo que representa un incremento aproximado del `r fmt_entero(100 * (m_per[["2_alto"]] / m_per[["1_antes"]] - 1))`%. Durante el primer semestre de 2026, el promedio decendió a  `r fmt_dec(m_per[["3_2026"]])` homicidios mensuales. Aunque este último valor es inferior al del período anterior, permanece por encima del nivel registrado antes de octubre 202 (@fig-serie; detalle en @tbl-periodos del anexo).
+  Entre enero de 2015 y septiembre de 2022 hubo en promedio `r fmt_dec(m_per[["1_antes"]])` homicidios mensuales. A partir de octubre de 2022, el promedio aumentó a `r fmt_dec(m_per[["2_alto"]])` homicidios por mes, lo que representa un incremento aproximado del `r fmt_entero(100 * (m_per[["2_alto"]] / m_per[["1_antes"]] - 1))`%. Durante el primer semestre de 2026, el promedio descendió a `r fmt_dec(m_per[["3_2026"]])` homicidios mensuales. Aunque este último valor es inferior al del período anterior, permanece por encima del nivel registrado antes de octubre 2022 (@fig-serie; detalle en @tbl-periodos del anexo).
 
 ```{r}
 #| label: fig-serie
-#| fig-cap: "Homicidios por mes; las líneas rojas son el promedio de cada período. Fuente: elaboración propia con datos de @oij2026."
-#| fig-height: 2.2
+#| fig-cap: "Evolución mensual de los homicidios y promedio correspondiente a cada período. Fuente: elaboración propia con datos de @oij2026."
+#| fig-height: 2.0
 #| fig-width: 6.8
 g_serie(mensual)
 ```
 
-En cuánto a la distribución geográfica, durante el periodo de nivel elevado,  `r nom_prov(prov_top$clave)` registró el mayor promedio mensual de homicidios, con `r fmt_dec(prov_top$prom)`. Por su parte, `r prov_may$provincia` presentó el mayor aporte al incremento absoluto entre los períodos comparados, con `r fmt_entero(100 * prov_may$aporte)`%, seguida de Limón con un 23%. En general, se observaron aumentos en los promedios mensuales de todas las provincias, aunque su magnitud varió entre `r fmt_dec(min(pc$razon), 2)` a `r fmt_dec(max(pc$razon), 2)`. Estos resultados corresponden a conteos absolutos y no a tasas ajustadas por población (@fig-mapa; @tbl-cambio-prov del anexo). Son conteos, no tasas.
+  En cuanto a la distribución geográfica, durante el periodo de nivel elevado,  `r nom_prov(prov_top$clave)` registró el mayor promedio mensual de homicidios, con `r fmt_dec(prov_top$prom)`. Por su parte, `r prov_may$provincia` presentó el mayor aporte al incremento absoluto entre los períodos comparados, con `r fmt_entero(100 * prov_may$aporte)`%, seguida de Limón con un 23%. En general, se observaron aumentos en los promedios mensuales de todas las provincias, aunque su magnitud varió entre `r fmt_dec(min(pc$razon), 2)` a `r fmt_dec(max(pc$razon), 2)`. Cabe destacar que estos resultados corresponden a conteos absolutos y no a tasas ajustadas por población (@fig-mapa; @tbl-cambio-prov del anexo).
 
 ```{r}
 #| label: fig-mapa
@@ -133,7 +129,7 @@ En cuánto a la distribución geográfica, durante el periodo de nivel elevado, 
 g_mapa(exp_$mapa, exp_$prov_df)
 ```
 
-En cuanto a la variable subdelito, el promedio de homicidios clasificados como ajuste de cuentas o venganza pasó de `r fmt_dec(sd_$ac_antes)` a `r fmt_dec(sd_$ac_alto)` entre los períodos comparados. En contraste, el promedio correspondiente a los demás subdelitos disminuyo de `r fmt_dec(sd_$ot_antes)` a `r fmt_dec(sd_$ot_alto)`. Por lo tanto, el incremento de la primera categoría compensó dicho crecimiento (@fig-subdelito).
+  En cuanto a la clasificación de los homicidios, descrita por la variable subdelito, el promedio mensual de homicidios clasificados como ajuste de cuentas o venganza pasó de `r fmt_dec(sd_$ac_antes)` a `r fmt_dec(sd_$ac_alto)` entre los períodos comparados. En contraste, el promedio correspondiente a los demás subdelitos disminuyó de `r fmt_dec(sd_$ot_antes)` a `r fmt_dec(sd_$ot_alto)`. Por lo tanto, el aumento de los homicidios asociados con ajustes de cuentas o venganzas explicó el incremento total observado, mientras que los demás subdelitos presentaron una disminución (@fig-subdelito).
 
 ```{r}
 #| label: fig-subdelito
@@ -146,17 +142,17 @@ g_subdelito(exp_$sub_anual)
 
 ## Modelo y proyección
 
-El procedimiento de identificación de cambios estructurales detectó `r if_else(mod$n_quiebres == 1, "un único cambio", paste(mod$n_quiebres, "cambios"))` de nivel, considerado el único quiebre, correspondiente a `r mod$mes_quiebre` como último mes del tramo de menor nivel. El promedio mensual pasó de `r fmt_dec(niv[["pre"]])` a `r fmt_dec(niv[["alto"]])` homicidios al mes a una razón de `r fmt_dec(rr_salto, 2)`, con un intervalo de confianza de 95% entre `r fmt_dec(ic_salto[1], 2)` a `r fmt_dec(ic_salto[2], 2)`). 
+  El procedimiento de Bai y Perron detectó un único quiebre al finalizar `r mod$mes_quiebre`. Entre los períodos anterior y posterior, hasta diciembre del 2025, el promedio mensual paso de `r fmt_dec(niv[["pre"]])` a `r fmt_dec(niv[["alto"]])` homicidios, con una razón estimada de `r fmt_dec(rr_salto, 2)`, con un intervalo de confianza de 95% entre `r fmt_dec(ic_salto[1], 2)` a `r fmt_dec(ic_salto[2], 2)`. El análisis de sensibilidad mostró resultados similares al modificar el período de observación o la fecha del quiebre, con razones entre 1,46 y 1,51 (@tbl-sens-salto)
+  
+  En las pruebas realizadas no se encontró evidencia estadística suficiente de una tendencia temporal (`r fmt_p(dg$p_tendencia)`) ni estacionalidad mensual (`r fmt_p(dg$p_estacional)`). Asimismo, la prueba de autocorrelación de los residuos no resultó significativa (`r fmt_p(dg$p_ljung_box)`). Estos resultados no sugieren la presencia de dichos patrones en las pruebas aplicadas, aunque no garantizan por sí solos la capacidad predictiva del modelo.
 
-En las pruebas realizadas no se encontró evidencia estadística suficiente de una tendencia temporal (`r fmt_p(dg$p_tendencia)`) ni estacionalidad (`r fmt_p(dg$p_estacional)`). Asimismo, la prueba de autocorrelación de los residuos no resultó significativa `r fmt_p(dg$p_ljung_box)`. Estos resultados respaldan algunos aspectos del ajuste, aunque deben interpretarse junto con las demás comprobaciones de los del modelo.
+  Para evaluar su desempeño fuera de la muestra, se ajustó el modelo con los datos hasta diciembre del 2025 y se proyectaron los homicidios del primer semestre de 2026. Se estimaron aproximadamente `r fmt_entero(va$esperado)` homicidios, frente a los `r fmt_entero(va$obs)` registrados. Esta diferencia muestra que el modelo basado en el nivel anterior sobreestimó los conteos observados durante esos seis meses, lo que evidencia una limitación al proyectar la continuidad del nivel elevado.
 
-En cuanto al comportamiento durante el primer semestre de 2026. Al ajustar el modelo con datos hasta diciembre del 2025, se proyectaron aproximadamente `r fmt_entero(va$esperado)` homicidios para los primeros seis meses de 2026, miestras que se registraron `r fmt_entero(va$obs)`. La diferencia indica que el nivel observado fue inferior al previsto por el modelo anterior. 
+  Al incorporar un tercer nivel específico para 2026, el promedio mensual estimado descendió a `r fmt_dec(niv[["baja"]])` homicidios al mes. Esta especificación presentó un AIC de `r fmt_dec(dg$aic_3niveles)` inferior al valor de `r fmt_dec(dg$aic_2niveles)` del modelo anterior, lo que indica un mejor ajuste relativo entre ambas especificaciones. No obstante, esta mejora no garantiza que el nuevo nivel se mantenga durante los meses posteriores. Además, las estadísticas más recientes podrían estar sujetas a actualizaciones por parte del OIJ. 
 
-Al incorporar un tercer nivel específico para 2026, el promedio mensual estimado descendió a `r fmt_dec(niv[["baja"]])` homicidios al mes. Esta especificación presentó un AIC de `r fmt_dec(dg$aic_3niveles)` inferior al valor de `r fmt_dec(dg$aic_2niveles)` del modelo anterior, lo que indica que un mejor ajuste relativo entre ambas especificaiones. No obstantes, las estadísticas más recientes podrían estar sujetas a actualizaciones por parte del OIJ. 
+  En la comparación de métodos predictivos a seis meses, el modelo de Poisson obtuvo un error absoluto medio de `r fmt_dec(mae[["poisson"]])`  homicidios, frente a `r fmt_dec(mae[["ets"]])` con ETS y `r fmt_dec(mae[["arima"]])` para ARIMA. Aunque Poisson presentó el menor error entre métodos, las diferencias fueron reducidas, por lo que no permiten afirmar una superioridad predictiva general (@tbl-comparacion del anexo).
 
-En la evalucación predictiva a seis meses, el modelo Poisson obtuvo un error absoluto medio de `r fmt_dec(mae[["poisson"]])`  homicidios, a comparación de `r fmt_dec(mae[["ets"]])` con ETS y `r fmt_dec(mae[["arima"]])` para ARIMA/SARIMA. Aunque Poisson presentó el menor error entre métodos, las diferencias fueron reducidas (@tbl-comparacion del anexo).
-
-Escenarios de proyección: Se consideran tres escenarios para analizar la evolución potencial de los homicidios a partir de julio de 2026: 
+  Para examinar distintos comportamientos futuros se establecieron tres escenarios de proyección a partir de julio de 2026: 
 
 **Escenario A (nivel alto):** Supone que se mantiene el promedio mensual estimado para el período comprendido entre octubre de 2022 y diciembre de 2025.
 
@@ -164,7 +160,7 @@ Escenarios de proyección: Se consideran tres escenarios para analizar la evoluc
 
 **Escenario C (nivel bajo):** Supone un retorno al promedio mensual registrado entre enero de 2015 y septiembre de 2022. Este escenario funciona como referencia comparativa y no implica que dicho retorno sea el resultado más probable.
 
-Los resultados permiten comparar el volumen de homicidios que se obtendría bajo distintos niveles de ocurrencia. Las medianas proyectadas y sus respectivos intervalos del 95 % se presentan en la (@tbl-esc; @fig-esc).
+  Los resultados permiten comparar el volumen de homicidios que se obtendría bajo distintos niveles de ocurrencia. Las medianas proyectadas y sus respectivos intervalos del 95 % se presentan en la @tbl-esc; @fig-esc.
 
 ```{r}
 #| label: tbl-esc
@@ -184,15 +180,14 @@ et |>
 #| fig-width: 6.8
 g_escenarios(mensual, esc$esc_mes)
 ```
+Las proyecciones muestran diferencias importantes según el nivel de homicidios supuesto. Para los siguientes 12 meses, las medianas estimadas son de 875 homicidios en el escenario A, 727 en el B y 581 en el C (@tbl-esc; @fig-esc). Aunque el escenario B representa una reducción respecto al nivel elevado, mantiene un promedio superior al registrado antes de octubre de 2022. 
 
+  Los intervalos predictivos del 95 % reflejan la incertidumbre de los conteos bajo cada escenario, pero no indican cuál de ellos tiene mayor probabilidad de ocurrir. Por tanto, las proyecciones deben interpretarse como resultados condicionados a la permanencia de los niveles considerados.
+  
 ## Conclusiones
 
-- La serie muestra un aumento de nivel de homicios desde octubre del 2022, con una reducción durante el primer semestre de 2026; el cambio destaca especialmente en los homicidios vinculados con ajuste de cuentas o venganzas.
-- Las proyecciones estiman entre `r fmt_entero(et$med12[2])` y `r fmt_entero(et$med12[1])` homicidios en los proximos 12 meses. Estos resultados son condicionales y representan conteos, no tasas ajustadas por población. 
-
-\newpage
-
-# Referencias
+- La serie muestra un aumento de nivel de homicidios desde octubre del 2022, con una reducción durante el primer semestre de 2026; el cambio destaca especialmente en los homicidios vinculados con ajuste de cuentas o venganzas.
+- Según el escenario considerado, las medianas proyectadas para los próximos 12 meses oscilan entre `r fmt_entero(et$med12[3])` y `r fmt_entero(et$med12[1])` homicidios. Estos resultados son condicionales y representan conteos, no tasas ajustadas por población. 
 
 ::: {#refs}
 :::
@@ -203,7 +198,7 @@ g_escenarios(mensual, esc$esc_mes)
 
 ```{r}
 #| label: tbl-periodos
-#| tbl-cap: "Homicidios mensuales por período. Fuente: elaboración propia con datos de OIJ (2026)."
+#| tbl-cap: "Resumen descriptivo de los homicidios mensuales por período. Fuente: elaboración propia con datos de OIJ (2026)."
 exp_$tab_periodos |>
   mutate(Promedio = fmt_dec(Promedio)) |>
   rename(`Mínimo` = Minimo, `Máximo` = Maximo) |>
@@ -212,7 +207,7 @@ exp_$tab_periodos |>
 
 ```{r}
 #| label: tbl-cambio-prov
-#| tbl-cap: "Cambio por provincia entre el período previo y el nivel alto. Fuente: elaboración propia con datos de OIJ (2026)."
+#| tbl-cap: "Variación del promedio mensual de homicidios por provincia entre los períodos 2015–2022 y 2022–2025. Fuente: elaboración propia con datos de OIJ (2026)."
 pc |>
   transmute(Provincia = provincia, Antes = fmt_dec(prom_antes), `Nivel alto` = fmt_dec(prom_alto),
             Razón = fmt_dec(razon, 2), `Aporte (%)` = fmt_entero(100 * aporte), p = fmt_p(p, con_p = FALSE)) |>
@@ -237,25 +232,6 @@ mod$mae |>
 esc$sens_salto |>
   transmute(Variante = escenario, Razón = fmt_dec(razon, 2)) |>
   kable(booktabs = TRUE, align = "lr")
-```
-
-```{r}
-#| label: tbl-sens-nivel
-#| tbl-cap: "Rango del total a 12 meses según el nivel de confianza. Fuente: elaboración propia con datos de OIJ (2026)."
-esc$sens_nivel |>
-  mutate(celda = str_c(fmt_entero(lo), "-", fmt_entero(hi)),
-         nivel_conf = str_c(100 * nivel_conf, "%")) |>
-  select(Escenario = escenario, nivel_conf, celda) |>
-  pivot_wider(names_from = nivel_conf, values_from = celda) |>
-  kable(booktabs = TRUE, align = "lrrrr")
-```
-
-```{r}
-#| label: fig-desagregada
-#| fig-cap: "Proyección a 12 meses por provincia, escenarios A y B (mediana y rango de 95%). Fuente: elaboración propia con datos de @oij2026."
-#| fig-height: 3.0
-#| fig-width: 6.8
-g_desagregada(esc$desagregada)
 ```
 
 
