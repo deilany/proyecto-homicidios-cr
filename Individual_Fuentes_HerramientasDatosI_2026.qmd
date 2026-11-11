@@ -196,6 +196,10 @@ Las proyecciones muestran diferencias importantes según el nivel de homicidios 
 
 # Anexos
 
+## Repositorio del proyecto
+
+El código, los datos y el informe en Quarto están disponibles en el repositorio público de GitHub: <https://github.com/deilany/proyecto-homicidios-cr>
+
 ```{r}
 #| label: tbl-periodos
 #| tbl-cap: "Resumen descriptivo de los homicidios mensuales por período. Fuente: elaboración propia con datos de OIJ (2026)."
